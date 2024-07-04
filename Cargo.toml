@@ -8,11 +8,14 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
+borsh = "1.5.1"
 bytemuck = "1.16.1"
 pyth-sdk-solana = "0.10.1"
 pyth_sdk_solana_0_9 = { package = "pyth-sdk-solana", version = "0.9.0" }
+serde = "1.0.203"
 solana-nostd-entrypoint = "0.3.0"
 solana-program = "=1.18.1"
+type-layout = "0.2.0"
 
 [dev-dependencies]
 solana-program-test = "1.18.1"

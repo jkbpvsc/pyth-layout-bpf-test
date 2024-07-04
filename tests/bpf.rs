@@ -28,3 +28,13 @@ async fn bpf_pyth_test() {
         .await
         .unwrap();
 }
+
+use pyth_layout_bpf_test::pyth_09::PriceAccount as PriceAccountV0_9_0;
+use pyth_layout_bpf_test::pyth_10::SolanaPriceAccount as PriceAccountV0_10_1;
+use type_layout::TypeLayout;
+
+#[test]
+fn basic() {
+    println!("PriceAccountV0_9_0 {}", PriceAccountV0_9_0::type_layout());
+    println!("PriceAccountV0_10_1 {}", PriceAccountV0_10_1::type_layout());
+}

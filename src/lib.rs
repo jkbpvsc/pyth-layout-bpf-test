@@ -4,6 +4,7 @@ use solana_nostd_entrypoint::{
     solana_program::{self, entrypoint::ProgramResult, pubkey::Pubkey},
     NoStdAccountInfo,
 };
+use type_layout::TypeLayout;
 
 solana_nostd_entrypoint::entrypoint_nostd!(processor, 4);
 solana_program::declare_id!("PYTHBPFTESTPYTHBPFTESTPYTHBPFTESTPYTHBPFTST");
@@ -11,8 +12,11 @@ solana_program::declare_id!("PYTHBPFTESTPYTHBPFTESTPYTHBPFTESTPYTHBPFTST");
 solana_program::custom_heap_default!();
 solana_program::custom_panic_default!();
 
-use pyth_sdk_solana::state::SolanaPriceAccount as PriceAccountV0_10_1;
-use pyth_sdk_solana_0_9::state::PriceAccount as PriceAccountV0_9_0;
+pub mod pyth_09;
+pub mod pyth_10;
+
+use crate::pyth_09::PriceAccount as PriceAccountV0_9_0;
+use crate::pyth_10::SolanaPriceAccount as PriceAccountV0_10_1;
 use solana_program::{log, msg};
 
 pub fn processor(
@@ -33,24 +37,27 @@ pub fn processor(
     let old = Box::new(old_gen());
     log::sol_log("declared old");
 
+    msg!("Pyth 0.9 {}", PriceAccountV0_9_0::type_layout());
+    msg!("Pyth 1.0 {}", PriceAccountV0_10_1::type_layout());
+
     #[rustfmt::skip]
     let new = Box::new(PriceAccountV0_10_1 {
         magic:          1,
         ver:            2,
         atype:          3,
         size:           4,
-        ptype:          pyth_sdk_solana::state::PriceType::Price,
+        ptype:          crate::pyth_10::PriceType::Price,
         expo:           5,
         num:            6,
         num_qt:         7,
         last_slot:      8,
         valid_slot:     9,
-        ema_price:      pyth_sdk_solana::state::Rational {
+        ema_price:      crate::pyth_10::Rational {
             val:   10,
             numer: 11,
             denom: 12,
         },
-        ema_conf:       pyth_sdk_solana::state::Rational {
+        ema_conf:       crate::pyth_10::Rational {
             val:   13,
             numer: 14,
             denom: 15,
@@ -66,11 +73,11 @@ pub fn processor(
         prev_price:     22,
         prev_conf:      23,
         prev_timestamp: 24,
-        agg:            pyth_sdk_solana::state::PriceInfo {
+        agg:            crate::pyth_10::PriceInfo {
             price:    25,
             conf:     26,
-            status:   pyth_sdk_solana::state::PriceStatus::Trading,
-            corp_act: pyth_sdk_solana::state::CorpAction::NoCorpAct,
+            status:   crate::pyth_10::PriceStatus::Trading,
+            corp_act: crate::pyth_10::CorpAction::NoCorpAct,
             pub_slot: 27,
         },
         comp:           [Default::default(); 32],
@@ -191,7 +198,7 @@ pub fn processor(
     assert_eq!(*ptype as i32, new.ptype as u8 as i32);
 
     // ema
-    let pyth_sdk_solana_0_9::state::Rational { val, numer, denom } = ema_price;
+    let crate::pyth_09::Rational { val, numer, denom } = ema_price;
     {
         check_field!(val, new.ema_price);
         check_field!(numer, new.ema_price);
@@ -199,7 +206,7 @@ pub fn processor(
     }
 
     // ema_conf
-    let pyth_sdk_solana_0_9::state::Rational { val, numer, denom } = ema_conf;
+    let crate::pyth_09::Rational { val, numer, denom } = ema_conf;
     {
         check_field!(val, new.ema_conf);
         check_field!(numer, new.ema_conf);
@@ -207,7 +214,7 @@ pub fn processor(
     }
 
     // agg
-    let pyth_sdk_solana_0_9::state::PriceInfo {
+    let crate::pyth_09::PriceInfo {
         price,
         conf,
         status,
@@ -225,7 +232,7 @@ pub fn processor(
 
     // comp
     for (c, new_c) in comp.iter().zip(new.comp) {
-        let pyth_sdk_solana_0_9::state::PriceComp {
+        let crate::pyth_09::PriceComp {
             publisher,
             agg,
             latest,
@@ -233,7 +240,7 @@ pub fn processor(
         check_field!(publisher, new_c);
 
         // agg
-        let pyth_sdk_solana_0_9::state::PriceInfo {
+        let crate::pyth_09::PriceInfo {
             price,
             conf,
             status,
@@ -250,7 +257,7 @@ pub fn processor(
         }
 
         // agg
-        let pyth_sdk_solana_0_9::state::PriceInfo {
+        let crate::pyth_09::PriceInfo {
             price,
             conf,
             status,
@@ -292,18 +299,18 @@ fn old_gen() -> PriceAccountV0_9_0 {
         atype: 3,
 
         size: 4,
-        ptype: pyth_sdk_solana_0_9::state::PriceType::Price,
+        ptype: crate::pyth_09::PriceType::Price,
         expo: 5,
         num: 6,
         num_qt: 7,
         last_slot: 8,
         valid_slot: 9,
-        ema_price: pyth_sdk_solana_0_9::state::Rational {
+        ema_price: crate::pyth_09::Rational {
             val: 10,
             numer: 11,
             denom: 12,
         },
-        ema_conf: pyth_sdk_solana_0_9::state::Rational {
+        ema_conf: crate::pyth_09::Rational {
             val: 13,
             numer: 14,
             denom: 15,
@@ -319,11 +326,11 @@ fn old_gen() -> PriceAccountV0_9_0 {
         prev_price: 22,
         prev_conf: 23,
         prev_timestamp: 24,
-        agg: pyth_sdk_solana_0_9::state::PriceInfo {
+        agg: crate::pyth_09::PriceInfo {
             price: 25,
             conf: 26,
-            status: pyth_sdk_solana_0_9::state::PriceStatus::Trading,
-            corp_act: pyth_sdk_solana_0_9::state::CorpAction::NoCorpAct,
+            status: crate::pyth_09::PriceStatus::Trading,
+            corp_act: crate::pyth_09::CorpAction::NoCorpAct,
             pub_slot: 27,
         },
         comp: [Default::default(); 32],
